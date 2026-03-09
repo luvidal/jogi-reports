@@ -11,7 +11,6 @@
  * - Whether fields are editable
  */
 
-import reportSituacion from './report_situation.json'
 import reportRenta from './report_renta.json'
 
 // ============================================================================
@@ -138,7 +137,6 @@ export type ReportSchema = {
 // ============================================================================
 
 const schemas: Record<string, ReportSchema> = {
-    'situation': reportSituacion as unknown as ReportSchema,
     'renta': reportRenta as unknown as ReportSchema,
 }
 

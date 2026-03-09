@@ -4,7 +4,6 @@
 export {
     basePdfStyles,
     landscapeStyles,
-    portraitStyles,
     cleanContentForPdf,
     generateBrandingStyles,
     generatePdfFooter,

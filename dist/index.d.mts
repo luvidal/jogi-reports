@@ -32,10 +32,6 @@ declare const basePdfStyles = "\n    @page { margin: 12mm; }\n    *, *::before, 
  */
 declare const landscapeStyles = "\n    @page { size: A4 landscape; }\n    body { font-size: 11px; }\n";
 /**
- * Portrait-specific styles for estado de situacion
- */
-declare const portraitStyles = "\n    @page { size: A4 portrait; }\n    body { font-size: 10px; }\n    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; }\n    th { background-color: #f9fafb; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }\n";
-/**
  * Clean content for PDF generation
  * Removes interactive elements and prepares for print
  * Applies branding colors directly via inline styles
@@ -149,4 +145,4 @@ declare const T: {
     readonly cardValue: "text-xs font-semibold";
 };
 
-export { type CompanyBranding, type ReportSection, T, basePdfStyles, calculateAge, cleanContentForPdf, displayCurrency, displayCurrencyCompact, displayDate, displayUF, displayValue, generateAndPrintPdf, generateBrandingStyles, generateCombinedPdf, generateCombinedPdfHtml, generatePdfFooter, generatePdfHtml, landscapeStyles, portraitStyles, printHtml, toTitleCase };
+export { type CompanyBranding, type ReportSection, T, basePdfStyles, calculateAge, cleanContentForPdf, displayCurrency, displayCurrencyCompact, displayDate, displayUF, displayValue, generateAndPrintPdf, generateBrandingStyles, generateCombinedPdf, generateCombinedPdfHtml, generatePdfFooter, generatePdfHtml, landscapeStyles, printHtml, toTitleCase };

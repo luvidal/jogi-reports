@@ -274,12 +274,6 @@ var landscapeStyles = `
     @page { size: A4 landscape; }
     body { font-size: 11px; }
 `;
-var portraitStyles = `
-    @page { size: A4 portrait; }
-    body { font-size: 10px; }
-    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; }
-    th { background-color: #f9fafb; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
-`;
 function cleanContentForPdf(element, branding) {
   const content = element.cloneNode(true);
   content.querySelectorAll(".hidden").forEach((el) => {
@@ -592,7 +586,8 @@ function generatePdfFooter(branding) {
 }
 function generatePdfHtml(options) {
   const { title, content, orientation = "landscape", extraStyles = "", branding } = options;
-  const orientationStyles = orientation === "landscape" ? landscapeStyles : portraitStyles;
+  const defaultPortraitStyles = `@page { size: A4 portrait; } body { font-size: 10px; }`;
+  const orientationStyles = orientation === "landscape" ? landscapeStyles : defaultPortraitStyles;
   const brandingStyles = generateBrandingStyles(branding);
   return `
         <!doctype html>
@@ -833,6 +828,6 @@ var T = {
   cardValue: "text-xs font-semibold"
 };
 
-export { T, basePdfStyles, calculateAge, cleanContentForPdf, displayCurrency, displayCurrencyCompact, displayDate, displayUF, displayValue, generateAndPrintPdf, generateBrandingStyles, generateCombinedPdf, generateCombinedPdfHtml, generatePdfFooter, generatePdfHtml, landscapeStyles, portraitStyles, printHtml, toTitleCase };
+export { T, basePdfStyles, calculateAge, cleanContentForPdf, displayCurrency, displayCurrencyCompact, displayDate, displayUF, displayValue, generateAndPrintPdf, generateBrandingStyles, generateCombinedPdf, generateCombinedPdfHtml, generatePdfFooter, generatePdfHtml, landscapeStyles, printHtml, toTitleCase };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

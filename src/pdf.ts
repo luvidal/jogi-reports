@@ -290,16 +290,6 @@ export const landscapeStyles = `
 `
 
 /**
- * Portrait-specific styles for estado de situacion
- */
-export const portraitStyles = `
-    @page { size: A4 portrait; }
-    body { font-size: 10px; }
-    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; }
-    th { background-color: #f9fafb; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
-`
-
-/**
  * Clean content for PDF generation
  * Removes interactive elements and prepares for print
  * Applies branding colors directly via inline styles
@@ -684,7 +674,8 @@ export function generatePdfHtml(options: {
     branding?: CompanyBranding | null
 }): string {
     const { title, content, orientation = 'landscape', extraStyles = '', branding } = options
-    const orientationStyles = orientation === 'landscape' ? landscapeStyles : portraitStyles
+    const defaultPortraitStyles = `@page { size: A4 portrait; } body { font-size: 10px; }`
+    const orientationStyles = orientation === 'landscape' ? landscapeStyles : defaultPortraitStyles
     const brandingStyles = generateBrandingStyles(branding)
 
     return `
