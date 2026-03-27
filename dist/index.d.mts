@@ -52,7 +52,7 @@ declare function generatePdfFooter(branding?: CompanyBranding | null): string;
  */
 declare function generatePdfHtml(options: {
     title: string;
-    content: HTMLElement;
+    content: HTMLElement | string;
     orientation?: 'landscape' | 'portrait';
     extraStyles?: string;
     branding?: CompanyBranding | null;

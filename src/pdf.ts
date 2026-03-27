@@ -5,6 +5,32 @@
 
 import type { CompanyBranding, ReportSection } from './types'
 
+// ─── Branding color derivation ───
+
+const DEFAULT_PRIMARY = '#9333ea'
+const DEFAULT_SECONDARY = '#7c3aed'
+const DEFAULT_ACCENT = '#a855f7'
+
+function resolveBrandingColors(branding?: CompanyBranding | null) {
+    const primary = branding?.primary_color || DEFAULT_PRIMARY
+    const secondary = branding?.secondary_color || DEFAULT_SECONDARY
+    const accent = branding?.accent_color || DEFAULT_ACCENT
+    return {
+        primary,
+        secondary,
+        accent,
+        primaryLight: `${primary}1a`,    // 10% opacity
+        primaryMedium: `${primary}33`,   // 20% opacity
+        primaryLighter: `${primary}0d`,  // 5% opacity
+    }
+}
+
+// ─── Shared color pattern prefixes for branding overrides ───
+
+const TEXT_COLOR_PREFIXES = ['purple', 'violet', 'emerald', 'blue', 'indigo', 'teal', 'cyan', 'rose', 'pink', 'amber', 'slate', 'sky']
+const BG_LIGHT_SHADES = ['50', '100']
+const BG_DARK_SHADES = ['500', '600', '700']
+const BORDER_SHADES = ['100', '200', '300']
 
 /**
  * Base CSS styles shared across all report PDFs
@@ -311,7 +337,7 @@ export function cleanContentForPdf(element: HTMLElement, branding?: CompanyBrand
     })
 
     // Handle buttons - convert section headers to styled divs, remove others
-    const primary = branding?.primary_color || '#9333ea'
+    const { primary } = resolveBrandingColors(branding)
     content.querySelectorAll('button').forEach(el => {
         if (el.classList.contains('w-full') && el.classList.contains('flex')) {
             // This is a section header button - convert to div with brand styling
@@ -364,16 +390,12 @@ export function cleanContentForPdf(element: HTMLElement, branding?: CompanyBrand
 
     // Apply branding colors directly to elements via inline styles
     if (branding) {
-        const primary = branding.primary_color || '#9333ea'
-        const accent = branding.accent_color || '#a855f7'
-        const primaryLight = `${primary}1a`
-        const primaryMedium = `${primary}33`
+        const { primary, accent, primaryLight, primaryMedium } = resolveBrandingColors(branding)
 
-        // Color patterns to replace
-        const textColorPatterns = ['text-purple', 'text-violet', 'text-emerald', 'text-blue', 'text-indigo', 'text-teal', 'text-cyan', 'text-rose', 'text-pink', 'text-amber', 'text-slate', 'text-sky']
-        const bgLightPatterns = ['bg-purple-50', 'bg-violet-50', 'bg-emerald-50', 'bg-blue-50', 'bg-indigo-50', 'bg-teal-50', 'bg-cyan-50', 'bg-rose-50', 'bg-pink-50', 'bg-amber-50', 'bg-slate-50', 'bg-slate-100', 'bg-sky-50']
-        const bgMediumPatterns = ['bg-purple-100', 'bg-violet-100', 'bg-emerald-100', 'bg-blue-100', 'bg-indigo-100', 'bg-teal-100', 'bg-cyan-100', 'bg-rose-100', 'bg-pink-100', 'bg-amber-100', 'bg-slate-200', 'bg-sky-100']
-        const bgDarkPatterns = ['bg-purple-500', 'bg-purple-600', 'bg-violet-500', 'bg-emerald-500', 'bg-blue-500', 'bg-indigo-500', 'bg-gradient-to-br', 'from-purple']
+        const textColorPatterns = TEXT_COLOR_PREFIXES.map(c => `text-${c}`)
+        const bgLightPatterns = TEXT_COLOR_PREFIXES.flatMap(c => BG_LIGHT_SHADES.map(s => `bg-${c}-${s}`))
+        const bgMediumPatterns = TEXT_COLOR_PREFIXES.map(c => `bg-${c}-200`)
+        const bgDarkPatterns = [...TEXT_COLOR_PREFIXES.flatMap(c => BG_DARK_SHADES.map(s => `bg-${c}-${s}`)), 'bg-gradient-to-br', 'from-purple']
 
         // Override ALL elements - scan through every element
         content.querySelectorAll('*').forEach(el => {
@@ -445,20 +467,17 @@ export function cleanContentForPdf(element: HTMLElement, branding?: CompanyBrand
 export function generateBrandingStyles(branding?: CompanyBranding | null): string {
     if (!branding) return ''
 
-    const primary = branding.primary_color || '#9333ea'
-    const secondary = branding.secondary_color || '#7c3aed'
-    const accent = branding.accent_color || '#a855f7'
+    const { primary, secondary, accent, primaryLight, primaryMedium, primaryLighter } = resolveBrandingColors(branding)
 
-    // Generate lighter versions for backgrounds
-    const primaryLight = `${primary}1a`  // 10% opacity
-    const primaryMedium = `${primary}33` // 20% opacity
-    const primaryLighter = `${primary}0d` // 5% opacity
+    // Build attribute selectors from shared color prefixes
+    const textSelectors = TEXT_COLOR_PREFIXES.map(c => `[class*="text-${c}-"]`).join(',\n        ')
+    const bgLightSelectors = TEXT_COLOR_PREFIXES.flatMap(c => BG_LIGHT_SHADES.map(s => `[class*="bg-${c}-${s}"]`)).join(',\n        ')
+    const bgDarkSelectors = TEXT_COLOR_PREFIXES.flatMap(c => BG_DARK_SHADES.map(s => `[class*="bg-${c}-${s}"]`)).join(',\n        ')
+    const borderSelectors = TEXT_COLOR_PREFIXES.flatMap(c => BORDER_SHADES.map(s => `[class*="border-${c}-${s}"]`)).join(',\n        ')
+    const gradientSelectors = TEXT_COLOR_PREFIXES.map(c => `[class*="from-${c}-"]`).join(',\n        ')
 
     return `
-        /* ============================================
-           BRAND COLOR OVERRIDES FOR PDF EXPORT
-           Replaces ALL Tailwind color classes with org colors
-           ============================================ */
+        /* Brand color overrides for PDF export */
 
         :root {
             --brand-primary: ${primary};
@@ -466,28 +485,14 @@ export function generateBrandingStyles(branding?: CompanyBranding | null): strin
             --brand-accent: ${accent};
         }
 
-        /* ===== TEXT COLORS ===== */
-        /* ALL colored text -> brand primary */
-        .text-purple-500, .text-purple-600, .text-purple-700, .text-purple-800,
-        .text-emerald-500, .text-emerald-600, .text-emerald-700, .text-emerald-800,
-        .text-teal-500, .text-teal-600, .text-teal-700,
-        .text-indigo-500, .text-indigo-600, .text-indigo-700,
-        .text-violet-500, .text-violet-600, .text-violet-700, .text-violet-800,
-        .text-sky-500, .text-sky-600, .text-sky-700,
-        .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800,
-        .text-cyan-500, .text-cyan-600, .text-cyan-700,
-        .text-rose-500, .text-rose-600, .text-rose-700,
-        .text-pink-500, .text-pink-600, .text-pink-700,
-        .text-amber-500, .text-amber-600, .text-amber-700,
-        .text-slate-500, .text-slate-600, .text-slate-700 {
+        /* Text colors -> brand primary */
+        ${textSelectors} {
             color: ${primary} !important;
         }
 
-        /* Override gradient text (used in headers) - MUST come after basePdfStyles */
-        .text-transparent,
-        .bg-clip-text,
-        h1.text-transparent,
-        h1.bg-clip-text {
+        /* Gradient text (headers) */
+        .text-transparent, .bg-clip-text,
+        h1.text-transparent, h1.bg-clip-text {
             color: ${primary} !important;
             background: none !important;
             background-image: none !important;
@@ -496,155 +501,59 @@ export function generateBrandingStyles(branding?: CompanyBranding | null): strin
             -webkit-text-fill-color: ${primary} !important;
         }
 
-        /* ===== BACKGROUND COLORS - SOLID ===== */
         /* Dark backgrounds -> brand primary */
-        .bg-purple-500, .bg-purple-600, .bg-purple-700,
-        .bg-emerald-500, .bg-emerald-600, .bg-emerald-700,
-        .bg-teal-500, .bg-teal-600,
-        .bg-indigo-500, .bg-indigo-600,
-        .bg-violet-500, .bg-violet-600,
-        .bg-sky-500, .bg-sky-600,
-        .bg-blue-500, .bg-blue-600,
-        .bg-cyan-500, .bg-cyan-600,
-        .bg-rose-500, .bg-rose-600,
-        .bg-pink-500, .bg-pink-600,
-        .bg-amber-500, .bg-amber-600 {
+        ${bgDarkSelectors} {
             background-color: ${primary} !important;
         }
 
-        /* ===== BACKGROUND COLORS - LIGHT (section headers, cards) ===== */
         /* Light backgrounds -> brand light */
-        .bg-purple-50, .bg-purple-100,
-        .bg-emerald-50, .bg-emerald-100,
-        .bg-teal-50, .bg-teal-100,
-        .bg-indigo-50, .bg-indigo-100,
-        .bg-violet-50, .bg-violet-100,
-        .bg-sky-50, .bg-sky-100,
-        .bg-blue-50, .bg-blue-100,
-        .bg-cyan-50, .bg-cyan-100,
-        .bg-rose-50, .bg-rose-100,
-        .bg-pink-50, .bg-pink-100,
-        .bg-amber-50, .bg-amber-100,
-        .bg-slate-50, .bg-slate-100, .bg-slate-200 {
+        ${bgLightSelectors} {
             background-color: ${primaryLight} !important;
         }
 
         /* Opacity variants */
-        .bg-purple-50\\/50, .bg-purple-50\\/30,
-        .bg-emerald-50\\/50, .bg-emerald-50\\/30,
-        .bg-emerald-100\\/50,
-        .bg-indigo-50\\/50, .bg-indigo-50\\/30,
-        .bg-violet-50\\/50, .bg-violet-50\\/30,
-        .bg-blue-50\\/50, .bg-blue-50\\/30 {
+        [class*="-50\\/"], [class*="-100\\/"] {
             background-color: ${primaryLighter} !important;
         }
 
-        /* ===== BORDER COLORS ===== */
-        .border-purple-100, .border-purple-200, .border-purple-300, .border-purple-500,
-        .border-emerald-100, .border-emerald-200, .border-emerald-300,
-        .border-teal-100, .border-teal-200, .border-teal-500,
-        .border-indigo-100, .border-indigo-200, .border-indigo-900,
-        .border-violet-100, .border-violet-200,
-        .border-sky-100, .border-sky-200,
-        .border-blue-100, .border-blue-200, .border-blue-300,
-        .border-cyan-100, .border-cyan-200,
-        .border-rose-100, .border-rose-200,
-        .border-pink-100, .border-pink-200,
-        .border-amber-100, .border-amber-200,
-        .border-slate-200, .border-slate-300 {
+        /* Borders -> brand medium */
+        ${borderSelectors} {
             border-color: ${primaryMedium} !important;
         }
 
-        /* ===== GRADIENTS ===== */
-        /* Override ALL gradient backgrounds with brand gradient */
-        .bg-gradient-to-br,
-        .bg-gradient-to-r,
-        .from-purple-500,
-        .from-purple-600,
-        [class*="from-purple-"],
-        [class*="from-emerald-"],
-        [class*="from-violet-"],
-        [class*="from-blue-"],
-        [class*="from-indigo-"] {
+        /* Gradients -> brand gradient */
+        .bg-gradient-to-br, .bg-gradient-to-r,
+        ${gradientSelectors} {
             background: linear-gradient(to bottom right, ${accent}, ${primary}) !important;
             background-image: linear-gradient(to bottom right, ${accent}, ${primary}) !important;
         }
 
-        /* Header icon box - the 48x48 rounded box with icon */
+        /* Header icon box */
         .w-12.h-12.rounded-xl {
             background: linear-gradient(to bottom right, ${accent}, ${primary}) !important;
         }
 
         /* Section header icon boxes */
-        .w-8.h-8.rounded-lg,
-        .w-10.h-10.rounded-lg {
+        .w-8.h-8.rounded-lg, .w-10.h-10.rounded-lg {
             background-color: ${primaryMedium} !important;
         }
 
-        /* ===== PDF SECTION HEADERS ===== */
-        .pdf-section-header {
-            background-color: ${primary} !important;
-        }
-        .pdf-section-header * {
-            color: white !important;
-        }
+        /* PDF section headers */
+        .pdf-section-header { background-color: ${primary} !important; }
+        .pdf-section-header * { color: white !important; }
         .pdf-section-header .text-xs,
-        .pdf-section-header .text-gray-500 {
-            color: rgba(255, 255, 255, 0.85) !important;
-        }
-        /* Icon box inside section header */
-        .pdf-section-header > div:first-child {
-            background-color: rgba(255, 255, 255, 0.2) !important;
-        }
+        .pdf-section-header .text-gray-500 { color: rgba(255, 255, 255, 0.85) !important; }
+        .pdf-section-header > div:first-child { background-color: rgba(255, 255, 255, 0.2) !important; }
+        .pdf-section-title { color: ${primary} !important; }
 
-        .pdf-section-title {
-            color: ${primary} !important;
-        }
-
-        /* ===== BRAND LOGO ===== */
+        /* Brand logo */
         .pdf-brand-logo {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 0.75rem;
-            background: white;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            overflow: hidden;
+            width: 3rem; height: 3rem; border-radius: 0.75rem;
+            background: white; border: 1px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); overflow: hidden;
         }
-        .pdf-brand-logo img {
-            width: 2.5rem;
-            height: 2.5rem;
-            object-fit: contain;
-        }
-
-        /* ===== WILDCARD OVERRIDES for any missed classes ===== */
-        [class*="violet-50"], [class*="blue-50"], [class*="emerald-50"],
-        [class*="teal-50"], [class*="indigo-50"], [class*="cyan-50"],
-        [class*="rose-50"], [class*="pink-50"], [class*="amber-50"] {
-            background-color: ${primaryLight} !important;
-        }
-
-        [class*="violet-100"], [class*="blue-100"], [class*="emerald-100"],
-        [class*="teal-100"], [class*="indigo-100"], [class*="cyan-100"],
-        [class*="rose-100"], [class*="pink-100"], [class*="amber-100"] {
-            background-color: ${primaryLight} !important;
-        }
-
-        [class*="violet-700"], [class*="blue-700"], [class*="emerald-700"],
-        [class*="teal-700"], [class*="indigo-700"], [class*="cyan-700"],
-        [class*="rose-700"], [class*="pink-700"], [class*="amber-700"],
-        [class*="slate-700"] {
-            color: ${primary} !important;
-        }
-
-        [class*="violet-200"], [class*="blue-200"], [class*="emerald-200"],
-        [class*="teal-200"], [class*="indigo-200"], [class*="cyan-200"],
-        [class*="rose-200"], [class*="pink-200"], [class*="amber-200"] {
-            border-color: ${primaryMedium} !important;
-        }
+        .pdf-brand-logo img { width: 2.5rem; height: 2.5rem; object-fit: contain; }
     `
 }
 
@@ -663,12 +572,35 @@ export function generatePdfFooter(branding?: CompanyBranding | null): string {
     `
 }
 
+// ─── Shared HTML document builder ───
+
+function buildHtmlDocument(options: {
+    title: string
+    styles: string[]
+    bodyHtml: string
+    branding?: CompanyBranding | null
+}): string {
+    const { title, styles, bodyHtml, branding } = options
+    return `<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <style>${styles.join('\n')}</style>
+</head>
+<body>
+    ${bodyHtml}
+    ${generatePdfFooter(branding)}
+</body>
+</html>`
+}
+
 /**
  * Generate complete PDF HTML document
  */
 export function generatePdfHtml(options: {
     title: string
-    content: HTMLElement
+    content: HTMLElement | string
     orientation?: 'landscape' | 'portrait'
     extraStyles?: string
     branding?: CompanyBranding | null
@@ -676,27 +608,14 @@ export function generatePdfHtml(options: {
     const { title, content, orientation = 'landscape', extraStyles = '', branding } = options
     const defaultPortraitStyles = `@page { size: A4 portrait; } body { font-size: 10px; }`
     const orientationStyles = orientation === 'landscape' ? landscapeStyles : defaultPortraitStyles
-    const brandingStyles = generateBrandingStyles(branding)
+    const bodyHtml = typeof content === 'string' ? content : content.outerHTML
 
-    return `
-        <!doctype html>
-        <html lang="es">
-        <head>
-            <meta charset="utf-8" />
-            <title>${title}</title>
-            <style>
-                ${basePdfStyles}
-                ${orientationStyles}
-                ${brandingStyles}
-                ${extraStyles}
-            </style>
-        </head>
-        <body>
-            ${content.outerHTML}
-            ${generatePdfFooter(branding)}
-        </body>
-        </html>
-    `
+    return buildHtmlDocument({
+        title,
+        styles: [basePdfStyles, orientationStyles, generateBrandingStyles(branding), extraStyles],
+        bodyHtml,
+        branding,
+    })
 }
 
 /**
@@ -770,16 +689,16 @@ export function generateCombinedPdfHtml(options: {
 
     if (reports.length === 0) return ''
 
+    const { primary } = resolveBrandingColors(branding)
+
     // Clean each report and wrap with page break and orientation
-    const sections = reports.map((report, index) => {
+    const sectionsHtml = reports.map((report, index) => {
         const cleaned = cleanContentForPdf(report.element.cloneNode(true) as HTMLElement, branding)
 
-        // Add section title header
         const sectionHeader = document.createElement('div')
         sectionHeader.className = 'pdf-section-header'
         sectionHeader.innerHTML = `<h2 class="pdf-section-title">${report.title}</h2>`
 
-        // Wrap in a section container with page-break and orientation class
         const wrapper = document.createElement('div')
         wrapper.className = `pdf-report-section ${report.orientation === 'portrait' ? 'portrait-section' : 'landscape-section'}`
         if (index > 0) {
@@ -791,66 +710,21 @@ export function generateCombinedPdfHtml(options: {
         return wrapper.outerHTML
     }).join('')
 
-    const brandingStyles = generateBrandingStyles(branding)
-
-    return `
-        <!doctype html>
-        <html lang="es">
-        <head>
-            <meta charset="utf-8" />
-            <title>${title}</title>
-            <style>
-                ${basePdfStyles}
-
-                /* Combined PDF specific styles */
-                @page {
-                    size: A4 landscape;
-                    margin: 10mm;
-                }
-
-                @page portrait {
-                    size: A4 portrait;
-                }
-
-                .portrait-section {
-                    page: portrait;
-                }
-
-                body {
-                    font-size: 10px;
-                }
-
-                .pdf-report-section {
-                    padding: 8px;
-                }
-
-                .pdf-section-header {
-                    margin-bottom: 16px;
-                    padding-bottom: 8px;
-                    border-bottom: 2px solid ${branding?.primary_color || '#9333ea'};
-                }
-
-                .pdf-section-title {
-                    font-size: 1.25rem;
-                    font-weight: 700;
-                    color: ${branding?.primary_color || '#9333ea'};
-                    margin: 0;
-                }
-
-                /* Override table styles for compact view */
-                th, td {
-                    padding: 0.375rem 0.5rem;
-                    font-size: 0.75rem;
-                }
-
-                /* Branding color overrides - replace app palette */
-                ${brandingStyles}
-            </style>
-        </head>
-        <body>
-            ${sections}
-            ${generatePdfFooter(branding)}
-        </body>
-        </html>
+    const combinedStyles = `
+        @page { size: A4 landscape; margin: 10mm; }
+        @page portrait { size: A4 portrait; }
+        .portrait-section { page: portrait; }
+        body { font-size: 10px; }
+        .pdf-report-section { padding: 8px; }
+        .pdf-section-header { margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid ${primary}; }
+        .pdf-section-title { font-size: 1.25rem; font-weight: 700; color: ${primary}; margin: 0; }
+        th, td { padding: 0.375rem 0.5rem; font-size: 0.75rem; }
     `
+
+    return generatePdfHtml({
+        title,
+        content: sectionsHtml,
+        extraStyles: combinedStyles,
+        branding,
+    })
 }
