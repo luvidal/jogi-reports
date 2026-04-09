@@ -601,8 +601,15 @@ var displayCurrencyCompact = (value, isDeduction = false) => {
   const thousands = Math.round(abs / 1e3);
   return `${sign}$${thousands.toLocaleString("es-CL")}`;
 };
-var toTitleCase = (str) => {
-  return str.toLowerCase().replace(/_/g, " ").replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+var LOWERCASE_ES = /* @__PURE__ */ new Set(["de", "del", "el", "la", "los", "las", "un", "una", "y", "e", "o", "en", "con", "por", "para", "a", "al"]);
+var toTitleCase = (str, preserve) => {
+  if (!str) return "";
+  return str.trim().replace(/_/g, " ").split(/\s+/).map((word, i) => {
+    if (preserve?.has(word)) return word;
+    const lower = word.toLowerCase();
+    if (i > 0 && LOWERCASE_ES.has(lower)) return lower;
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(" ");
 };
 var displayUF = (value) => {
   if (value === void 0 || value === null) return "";

@@ -28,12 +28,26 @@ export const displayCurrencyCompact = (value: number | undefined | null, isDeduc
     return `${sign}$${thousands.toLocaleString('es-CL')}`
 }
 
-/** Convert UPPER CASE or snake_case label to Title Case */
-export const toTitleCase = (str: string): string => {
+/**
+ * Convert UPPER CASE or snake_case label to Title Case (Spanish).
+ * Keeps Spanish articles/prepositions lowercase (except when first word).
+ * Optional `preserve` set keeps specific tokens in their original case (e.g. acronyms).
+ */
+const LOWERCASE_ES = new Set(['de', 'del', 'el', 'la', 'los', 'las', 'un', 'una', 'y', 'e', 'o', 'en', 'con', 'por', 'para', 'a', 'al'])
+
+export const toTitleCase = (str: string, preserve?: Set<string>): string => {
+    if (!str) return ''
     return str
-        .toLowerCase()
+        .trim()
         .replace(/_/g, ' ')
-        .replace(/(^|\s)\S/g, c => c.toUpperCase())
+        .split(/\s+/)
+        .map((word, i) => {
+            if (preserve?.has(word)) return word
+            const lower = word.toLowerCase()
+            if (i > 0 && LOWERCASE_ES.has(lower)) return lower
+            return lower.charAt(0).toUpperCase() + lower.slice(1)
+        })
+        .join(' ')
 }
 
 export const displayUF = (value: number | undefined | null): string => {

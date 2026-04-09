@@ -104,8 +104,7 @@ declare const displayCurrency: (value: number | undefined | null) => string;
  * Full value is preserved in editing and shown in tooltip (displayCurrency).
  */
 declare const displayCurrencyCompact: (value: number | undefined | null, isDeduction?: boolean) => string;
-/** Convert UPPER CASE or snake_case label to Title Case */
-declare const toTitleCase: (str: string) => string;
+declare const toTitleCase: (str: string, preserve?: Set<string>) => string;
 declare const displayUF: (value: number | undefined | null) => string;
 declare const displayDate: (dateStr: string | undefined | null) => string;
 declare const calculateAge: (dateStr: string) => string;
