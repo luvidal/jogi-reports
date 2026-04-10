@@ -9,12 +9,3 @@ export interface CompanyBranding {
     secondary_color: string | null
     accent_color: string | null
 }
-
-/**
- * Report section for combined PDF
- */
-export interface ReportSection {
-    title: string
-    element: HTMLElement
-    orientation?: 'landscape' | 'portrait'
-}
