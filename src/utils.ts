@@ -66,12 +66,12 @@ export const displayDate = (dateStr: string | undefined | null): string => {
     }
 }
 
-export const calculateAge = (dateStr: string): string => {
+export const calculateAge = (dateStr: string, referenceDate?: Date): string => {
     if (!dateStr) return '—'
     try {
         const birthDate = new Date(dateStr)
         if (isNaN(birthDate.getTime())) return '—'
-        const today = new Date()
+        const today = referenceDate ?? new Date()
         let age = today.getFullYear() - birthDate.getFullYear()
         const monthDiff = today.getMonth() - birthDate.getMonth()
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {

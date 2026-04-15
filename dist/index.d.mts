@@ -15,7 +15,7 @@ declare const displayCurrencyCompact: (value: number | undefined | null, isDeduc
 declare const toTitleCase: (str: string, preserve?: Set<string>) => string;
 declare const displayUF: (value: number | undefined | null) => string;
 declare const displayDate: (dateStr: string | undefined | null) => string;
-declare const calculateAge: (dateStr: string) => string;
+declare const calculateAge: (dateStr: string, referenceDate?: Date) => string;
 
 declare const T: {
     readonly table: "w-full text-xs";

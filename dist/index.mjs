@@ -38,12 +38,12 @@ var displayDate = (dateStr) => {
     return dateStr;
   }
 };
-var calculateAge = (dateStr) => {
+var calculateAge = (dateStr, referenceDate) => {
   if (!dateStr) return "\u2014";
   try {
     const birthDate = new Date(dateStr);
     if (isNaN(birthDate.getTime())) return "\u2014";
-    const today = /* @__PURE__ */ new Date();
+    const today = referenceDate ?? /* @__PURE__ */ new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     if (monthDiff < 0 || monthDiff === 0 && today.getDate() < birthDate.getDate()) {
